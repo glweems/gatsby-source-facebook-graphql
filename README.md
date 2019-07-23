@@ -40,12 +40,6 @@ module.exports = {
             'place_type',
           ],
         },
-        // Settings are optional
-        settings: {
-          timeout: 3000,
-          pool: { maxSockets: Infinity },
-          headers: { connection: 'keep-alive' },
-        },
         // Access Token from facebook
         accessToken: process.env.GATSBY_FACEBOOK_GRAPH_TOKEN,
       },

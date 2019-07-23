@@ -7,19 +7,21 @@ export const sourceNodes = async (
     pageId,
     accessToken,
     params,
-    settings,
-  }: { pageId: string; accessToken: string; params: { fields: string[] }; settings: {} },
+  }: { pageId: string; accessToken: string; params: { fields: string[] } },
 ) => {
   // Set current access token
   graph.setAccessToken(accessToken)
 
-  // Set any user settings for query
-  graph.setOptions(settings)
+  const options = {
+    timeout: 3000,
+    pool: { maxSockets: Infinity },
+    headers: { connection: 'keep-alive' },
+  }
 
   // Facebook graphql data fetch
   const getData = async (from: string, params = {}): Promise<object> => {
     return await new Promise((resolve, reject) => {
-      graph.get(from, params, (err: any, res: any) => {
+      graph.setOptions(options).get(from, params, (err: any, res: any) => {
         if (err) {
           return reject(new Error(err.message))
         }
@@ -31,19 +33,17 @@ export const sourceNodes = async (
     })
   }
 
-  // Strigify params
-  const stringifyArray = ({ fields }: { fields: string[] }): string => {
+  // Format params for fbgraph
+  const formatParams = ({ fields }: { fields: string[] }): { fields: string } => {
     let string = ''
     fields.map(
       (item, i): string => (i < fields.length - 1 ? (string += `${item},`) : (string += item)),
     )
-    return string
+    return { fields: string }
   }
+  const nodeData = await getData(pageId.toString(), formatParams(params))
 
-  const nodeData = await getData(pageId.toString(), stringifyArray(params))
-
-  // Source Node
-  const sourceNode = {
+  const sourceNodes = {
     id: createNodeId('facebook'),
     parent: null,
     children: [],
@@ -58,5 +58,5 @@ export const sourceNodes = async (
     },
   }
 
-  return createNode(sourceNode)
+  return createNode(sourceNodes)
 }
